@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Recruitment - Cat Cafe Style with Assistant</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the warm, cat cafe feel */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: linear-gradient(to bottom right, #f8f0e3, #e2f2e8);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .form-container {
+            background-color: #ffffff;
+            border: 2px solid #b7d8d2;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            z-index: 10;
+        }
+        .form-input, .form-textarea, .form-file-input {
+            background-color: #fcfcfc;
+            border: 1px solid #d4e8e5;
+            color: #5a6a6a;
+            transition: all 0.2s ease-in-out;
+        }
+        .form-input:focus, .form-textarea:focus {
+            border-color: #8ed1c3;
+            box-shadow: 0 0 0 3px rgba(142, 209, 195, 0.4);
+        }
+        .submit-button {
+            background-image: linear-gradient(to right, #f4a261, #e9c46a);
+            box-shadow: 0 4px 12px rgba(244, 162, 97, 0.4);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+        .submit-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 18px rgba(244, 162, 97, 0.6);
+        }
+        .title-text {
+            color: #5a6a6a;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+        }
+        .label-text {
+            color: #7b8e8d;
+        }
+
+        /* Cat Animation Styles */
+        .running-cat {
+            position: fixed;
+            bottom: 20px;
+            left: -100px;
+            font-size: 4rem;
+            animation: catRun 15s linear infinite;
+            white-space: nowrap;
+            z-index: 5;
+            opacity: 0.8;
+            display: flex;
+            align-items: flex-end;
+            height: 100px;
+        }
+
+        @keyframes catRun {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(calc(100vw + 100px));
+            }
+        }
+
+        /* Assistant Chat Widget Styles */
+        .chat-widget-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            width: 320px; /* Fixed width for chat */
+            max-height: 80vh; /* Max height to prevent it from covering too much screen */
+            display: flex;
+            flex-direction: column;
+            border-radius: 1.5rem; /* Rounded corners for the whole widget */
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            background-color: #ffffff;
+            border: 2px solid #b7d8d2;
+            transition: all 0.3s ease-in-out;
+        }
+        .chat-widget-container.collapsed {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #f4a261; /* Warm orange from submit button */
+            color: white;
+            padding: 1rem;
+            border-top-left-radius: 1.25rem;
+            border-top-right-radius: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+        .chat-body {
+            flex-grow: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            max-height: calc(80vh - 120px); /* Adjust based on header/footer height */
+            background-color: #fffaf0; /* Light creamy background */
+            border-bottom-left-radius: 1.25rem; /* For when collapsed or only body visible */
+            border-bottom-right-radius: 1.25rem;
+        }
+        .chat-footer {
+            padding: 1rem;
+            border-top: 1px solid #d4e8e5;
+            display: flex;
+            gap: 0.5rem;
+            background-color: #fcfcfc;
+            border-bottom-left-radius: 1.25rem;
+            border-bottom-right-radius: 1.25rem;
+        }
+        .chat-input {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            border: 1px solid #d4e8e5;
+            background-color: #ffeef2;
+            color: #5a6a6a;
+        }
+        .chat-send-button {
+            background-color: #8ed1c3; /* Brighter teal */
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            transition: background-color 0.2s ease;
+        }
+        .chat-send-button:hover {
+            background-color: #6fb8a9;
+        }
+        .message-bubble {
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            margin-bottom: 0.75rem;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        .message-bubble.user {
+            background-color: #d4e8e5; /* Muted teal */
+            margin-left: auto; /* Align to right */
+            border-bottom-right-radius: 0.25rem;
+        }
+        .message-bubble.assistant {
+            background-color: #ffe0b2; /* Soft orange/peach */
+            margin-right: auto; /* Align to left */
+            border-bottom-left-radius: 0.25rem;
+        }
+        .loading-dots {
+            display: inline-block;
+        }
+        .loading-dots span {
+            display: inline-block;
+            animation: blink 1.4s infinite ease-in-out both;
+            opacity: 0.2;
+        }
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0.2; }
+            40% { opacity: 1; }
+        }
+        .chat-toggle-icon {
+            font-size: 2rem; /* Size of the cat icon */
+            line-height: 1;
+            color: white;
+            transition: transform 0.3s ease-in-out;
+        }
+        .chat-toggle-icon.expanded {
+            transform: rotate(180deg);
+        }
+        .chat-widget-container.collapsed .chat-header {
+            border-radius: 50%;
+            height: 60px;
+            width: 60px;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            padding: 0;
+        }
+        .chat-widget-container.collapsed .chat-header span {
+            display: none; /* Hide text when collapsed */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <!-- Running Cat Animation -->
+    <div class="running-cat">
+        🐾
+    </div>
+
+    <div class="form-container w-full max-w-2xl mx-auto p-8 rounded-3xl">
+        <h1 class="title-text text-4xl md:text-5xl font-extrabold text-center mb-10">
+            Work Recruitment Personal Detail
+        </h1>
+
+        <form action="#" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <!-- Name Field -->
+            <div>
+                <label for="name" class="block text-lg font-medium label-text mb-2">Name</label>
+                <input type="text" id="name" name="name" required
+                       class="form-input block w-full px-4 py-3 rounded-xl"
+                       placeholder="Enter your full name">
+            </div>
+
+            <!-- Age Field -->
+            <div>
+                <label for="age" class="block text-lg font-medium label-text mb-2">Age</label>
+                <input type="number" id="age" name="age" required min="16" max="99"
+                       class="form-input block w-full px-4 py-3 rounded-xl"
+                       placeholder="Your age (must be 16 or older)">
+            </div>
+
+            <!-- Email Address Field -->
+            <div>
+                <label for="email" class="block text-lg font-medium label-text mb-2">Email Address</label>
+                <input type="email" id="email" name="email" required
+                       class="form-input block w-full px-4 py-3 rounded-xl"
+                       placeholder="your.email@example.com">
+            </div>
+
+            <!-- Phone Number Field -->
+            <div>
+                <label for="phone" class="block text-lg font-medium label-text mb-2">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required
+                       class="form-input block w-full px-4 py-3 rounded-xl"
+                       placeholder="+60 12-345 6789 (e.g., for Malaysia)">
+            </div>
+
+            <!-- Photo Upload Field -->
+            <div>
+                <label for="photo" class="block text-lg font-medium label-text mb-2">Upload Photo</label>
+                <input type="file" id="photo" name="photo" accept="image/*" required
+                       class="form-file-input block w-full text-pink-700 file:mr-4 file:py-2 file:px-4
+                              file:rounded-full file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-pink-100 file:text-pink-700
+                              hover:file:bg-pink-200 transition-all duration-200">
+                <p class="text-sm text-gray-500 mt-1">Please upload a photo of yourself (JPG, PNG, GIF, max 5MB).</p>
+            </div>
+
+            <!-- Self-Description Field -->
+            <div>
+                <label for="description" class="block text-lg font-medium label-text mb-2">Describe Yourself</label>
+                <textarea id="description" name="description" rows="6" required
+                          class="form-textarea block w-full px-4 py-3 rounded-xl"
+                          placeholder="Tell us about yourself, your hobbies, what you enjoy doing, and why you think you'd be a great addition to our cozy cat cafe bar!"></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+                <button type="submit"
+                        class="submit-button w-full flex justify-center py-3 px-6 border border-transparent rounded-full
+                               text-xl font-semibold text-white focus:outline-none focus:ring-2 focus:ring-offset-2
+                               focus:ring-[#f4a261]">
+                    Send Enquiry
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- AI Assistant Chat Widget -->
+    <div id="chat-widget" class="chat-widget-container collapsed">
+        <div id="chat-header" class="chat-header">
+            <span class="text-lg">Purr-fect Assistant!</span>
+            <span class="chat-toggle-icon">😺</span>
+        </div>
+        <div id="chat-body" class="chat-body hidden">
+            <!-- Chat messages will appear here -->
+            <div class="message-bubble assistant">
+                Meow! I'm your purr-sonal assistant. How can I help you fill out this form today? Just ask meow!
+            </div>
+        </div>
+        <div id="chat-footer" class="chat-footer hidden">
+            <input type="text" id="chat-input" class="chat-input" placeholder="Ask meow anything...">
+            <button id="send-button" class="chat-send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatWidget = document.getElementById('chat-widget');
+        const chatHeader = document.getElementById('chat-header');
+        const chatBody = document.getElementById('chat-body');
+        const chatFooter = document.getElementById('chat-footer');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+        const chatToggleIcon = document.querySelector('.chat-toggle-icon');
+
+        let chatHistory = []; // To store chat messages for the API
+        let isChatOpen = false;
+
+        // Toggle chat widget open/close
+        chatHeader.addEventListener('click', () => {
+            isChatOpen = !isChatOpen;
+            if (isChatOpen) {
+                chatWidget.classList.remove('collapsed');
+                chatBody.classList.remove('hidden');
+                chatFooter.classList.remove('hidden');
+                chatToggleIcon.classList.add('expanded');
+                chatInput.focus();
+            } else {
+                chatWidget.classList.add('collapsed');
+                chatBody.classList.add('hidden');
+                chatFooter.classList.add('hidden');
+                chatToggleIcon.classList.remove('expanded');
+            }
+        });
+
+        // Function to display messages in the chat body
+        function displayMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message-bubble', sender);
+            messageDiv.textContent = text;
+            chatBody.appendChild(messageDiv);
+            chatBody.scrollTop = chatBody.scrollHeight; // Scroll to bottom
+        }
+
+        // Function to send message to the AI
+        async function sendMessage() {
+            const userMessage = chatInput.value.trim();
+            if (userMessage === '') return;
+
+            displayMessage(userMessage, 'user');
+            chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
+            chatInput.value = ''; // Clear input
+
+            // Show loading dots
+            const loadingMessageDiv = document.createElement('div');
+            loadingMessageDiv.classList.add('message-bubble', 'assistant', 'loading-message');
+            loadingMessageDiv.innerHTML = `<span>.</span><span>.</span><span>.</span>`;
+            chatBody.appendChild(loadingMessageDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+
+            try {
+                const payload = {
+                    contents: chatHistory,
+                    generationConfig: {
+                        temperature: 0.7, // Adjust creativity
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 200,
+                        stopSequences: [],
+                    },
+                };
+                const apiKey = ""; // Canvas will provide this dynamically
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                
+                // Remove loading dots
+                chatBody.removeChild(loadingMessageDiv);
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const assistantResponse = result.candidates[0].content.parts[0].text;
+                    displayMessage(assistantResponse, 'assistant');
+                    chatHistory.push({ role: "model", parts: [{ text: assistantResponse }] });
+                } else {
+                    displayMessage("Oops! My whiskers got tangled. I couldn't fetch a response.", 'assistant');
+                    console.error("Gemini API response format unexpected:", result);
+                }
+            } catch (error) {
+                // Remove loading dots on error as well
+                const loadingMessage = chatBody.querySelector('.loading-message');
+                if (loadingMessage) {
+                    chatBody.removeChild(loadingMessage);
+                }
+                displayMessage("Purr-oblem! I'm having trouble connecting. Please try again later.", 'assistant');
+                console.error("Error fetching from Gemini API:", error);
+            }
+        }
+
+        // Event listeners for sending messages
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
